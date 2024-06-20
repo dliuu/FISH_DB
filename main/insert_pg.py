@@ -17,7 +17,7 @@ Base = declarative_base()
 
 
 class InsertPostgres:
-    def __init__(self, obj:object, hostname: str, username: str, password: str, database: str):
+    def __init__(self, obj: object, hostname: str, username: str, password: str, database: str):
         self.engine = create_engine(f'postgresql://{username}:{password}@{hostname}/{database}')
         self.obj = obj
 
@@ -42,7 +42,7 @@ class InsertPostgres:
         "product_type": "Type A",
         "property_fish": "Property A}
         
-        where empty columns are ommitted
+        where empty columns are omitted
         '''
         result_dict = {}
         mapper = inspect(self.obj)
@@ -58,7 +58,6 @@ class InsertPostgres:
             if column_name in transformed_data:
                 result_dict[column_name] = transformed_data[column_name]
         
-        print("Resulting dictionary:", result_dict)  # Debug print
 
         return result_dict
 
@@ -68,37 +67,45 @@ class InsertPostgres:
         try:
             if 'response' in json_list:
                 results = json.loads(json_list)['response']['results']
-                
             else:
                 results = json_list
 
-            # Create a session
             session = self.Session()
             now = datetime.now()
 
-            # Insert JSON data into the 'loan' table
+            # Insert or update JSON data into the table
             for data in results:
                 json_string = json.dumps(data)
                 
                 validated_dict = self.create_loan_dict(data)
 
-                #formats unique_id as month day year hour_uniqueid
-                validated_dict['unique_id'] = str(now.strftime("%m%d%Y")) + str(now.strftime("%H")) + "_" + data['_id']
+                # Formats unique_id as month day year hour_uniqueid
+                validated_dict['unique_id'] = "1_" + data['_id']
 
-                if session.query(self.obj).filter_by(unique_id=validated_dict['unique_id']).first():
-                    print(f"Duplicate entry found for unique_id: {validated_dict['unique_id']}, skipping insert.")
-                    continue
+                #Retrieves existing entry
+                existing_entry = session.query(self.obj).filter_by(unique_id=validated_dict['unique_id']).first()
 
-                #throws raw json into raw_json
-                validated_dict['raw_json'] = json_string 
+                if existing_entry.raw_json == json_string:
+                        #If records are the exact same, pass
+                        print(f"No changes detected for entry with unique_id: {validated_dict['unique_id']}")
+                        continue
                 
-                entry = self.obj(**validated_dict)
-                
-                session.add(entry)
+                if existing_entry:
+                    # Update the existing entry
+                    for key, value in validated_dict.items():
+                        setattr(existing_entry, key, value)
+                    print(f"Updated entry with unique_id: {validated_dict['unique_id']}")
 
-            # Commit changes
+                else:
+                    # Insert a new entry
+                    validated_dict['raw_json'] = json_string
+                    entry = self.obj(**validated_dict)
+                    session.add(entry)
+                    print(f"Inserted entry with unique_id: {validated_dict['unique_id']}")
+
+
             session.commit()
-            print("Data inserted successfully")
+            print("Data inserted/updated successfully")
 
         except Exception as error:
             print("Error while connecting to PostgreSQL:", error)
@@ -108,7 +115,7 @@ class InsertPostgres:
                 session.close()
                 print("PostgreSQL connection is closed")
 
-    def insert_table(self, url:str, apikey:str, bubble_table:str, schema:object):
+    def insert_table(self, url: str, apikey: str, bubble_table: str, schema: object):
         bubble_api = BubbleAPI(url, apikey)
 
         json_list = bubble_api.GET_all_objects(bubble_table)
@@ -116,12 +123,13 @@ class InsertPostgres:
 
         self.insert_data(str_json)
 
+
 #__Main__
 
-hostname = 'ls-85eee0d2cc3d8908046ecb29cdfe4e2ddb241ebc.cktchk5fub2f.us-east-1.rds.amazonaws.com'
-username = 'dbmasteruser'
-password = 'P#7N12nj!qRwlZTDt>XeQ_ODbd2,}QvS'
-database = 'bubble-backup'
+hostname = ''
+username = ''
+password = ''
+database = 'postgres'
 
 test_url = 'https://ifish.tech/version-test/api/1.1/obj'
 apikey = '6102e1e766adb69c863124ac8b059bc7'
@@ -129,14 +137,14 @@ apikey = '6102e1e766adb69c863124ac8b059bc7'
 #instance = InsertPostgres(Loan_Application, hostname, username, password, database)
 #instance.insert_table(test_url, apikey, 'Loan Application', Loan_Application)
 
-#instance = InsertPostgres(Loan, hostname, username, password, database)
-#instance.insert_table(test_url, apikey, 'Loan', Loan)
+instance = InsertPostgres(Loan, hostname, username, password, database)
+instance.insert_table(test_url, apikey, 'Loan', Loan)
 
 #instance = InsertPostgres(Payment, hostname, username, password, database)
 #instance.insert_table(test_url, apikey, '(FISH) Payments', Payment)
 
-instance = InsertPostgres(Funding, hostname, username, password, database)
-instance.insert_table(test_url, apikey, '(FISH) Funding', Funding)
+#instance = InsertPostgres(Funding, hostname, username, password, database)
+#instance.insert_table(test_url, apikey, '(FISH) Funding', Funding)
 
 #instance = InsertPostgres(Company, hostname, username, password, database)
 #instance.insert_table(test_url, apikey, '(FISH) Company', Company)

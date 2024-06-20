@@ -99,6 +99,7 @@ class BubbleAPI:
 raw_url = 'https://ifish.tech/version-test/api/1.1/obj'
 apikey = '6102e1e766adb69c863124ac8b059bc7'
 bubble_api = BubbleAPI(raw_url, apikey)
+#print(bubble_api.GET_all_objects('Loan'))
 
 # Uncomment to test fetching and writing snapshot files
 # bubble_api.write_snapshot_files()
