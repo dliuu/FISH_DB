@@ -126,9 +126,9 @@ class InsertPostgres:
 
 #__Main__
 
-hostname = ''
-username = ''
-password = ''
+hostname = 'ls-3a42eaaff9b377bfc04f3e8af74d944d01035147.cktchk5fub2f.us-east-1.rds.amazonaws.com'
+username = 'dbmasteruser'
+password = 'r4Hnp|I*,+*#uJ-6n10jK(_k5xhXO(c&'
 database = 'postgres'
 
 test_url = 'https://ifish.tech/version-test/api/1.1/obj'
