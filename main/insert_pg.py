@@ -84,13 +84,13 @@ class InsertPostgres:
 
                 #Retrieves existing entry
                 existing_entry = session.query(self.obj).filter_by(unique_id=validated_dict['unique_id']).first()
-
-                if existing_entry.raw_json == json_string:
+                
+                if existing_entry:
+                    if existing_entry.raw_json == json_string:
                         #If records are the exact same, pass
                         print(f"No changes detected for entry with unique_id: {validated_dict['unique_id']}")
                         continue
-                
-                if existing_entry:
+
                     # Update the existing entry
                     for key, value in validated_dict.items():
                         setattr(existing_entry, key, value)
