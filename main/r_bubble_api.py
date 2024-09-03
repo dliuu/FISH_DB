@@ -97,7 +97,7 @@ class BubbleAPI:
 
 # Example usage:
 raw_url = 'https://ifish.tech/version-test/api/1.1/obj'
-apikey = ''
+apikey = '3d83175353e3af62cc0d4dd5c167a855'
 bubble_api = BubbleAPI(raw_url, apikey)
 #print(bubble_api.GET_all_objects('Loan'))
 
